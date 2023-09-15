@@ -3,6 +3,9 @@ import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+import constant
 
 
 def perform_eda(original_df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
@@ -59,14 +62,42 @@ def categorical_attributes_plot(df: pd.DataFrame):
     rows = math.ceil(len(fields) / cols)
 
     plt.subplots(rows, cols, figsize=(20, 14))
-    for i in range(1, len(fields) + 1):
-        plt.subplot(rows, cols, i)
-        df[fields[i - 1]].value_counts().sort_values().plot.bar()
+    for i in range(len(fields)):
+        plt.subplot(rows, cols, i+1)
+        df[fields[i]].value_counts().sort_values().plot.bar()
         plt.xticks(rotation=90)
-        plt.title(fields[i - 1])
+        plt.title(fields[i])
 
     plt.tight_layout()
     plt.savefig("./figures/categorical_attributes_bar_chart.png")
+    plt.show()
+
+    plt.subplots(rows, cols, figsize=(30, 20))
+    for i in range(len(fields)):
+        plt.subplot(rows, cols, i+1)
+        attribute = fields[i]
+        low_income = df.loc[df[constant.TARGET] == '<=50K', attribute]
+        high_income = df.loc[df[constant.TARGET] == '>50K', attribute]
+        low_income_stats = low_income.value_counts()
+        high_income_stats = high_income.value_counts()
+
+        low_bar = plt.barh(
+            low_income_stats.index,
+            low_income_stats.values,
+            alpha=0.5,
+        )
+        high_bar = plt.barh(
+            high_income_stats.index,
+            high_income_stats.values,
+            alpha=0.5,
+        )
+
+        plt.title(attribute)
+        plt.xlabel('Number of Entries')
+        plt.legend([low_bar, high_bar], ['<=50K', '>50K'])
+        plt.yticks(np.arange(len(high_income_stats)), high_income_stats.index)
+    plt.tight_layout()
+    plt.savefig("./figures/categorical_attributes_vs_income_bar_chart.png")
     plt.show()
 
 
@@ -81,4 +112,13 @@ def numerical_attributes_plot(df: pd.DataFrame):
 
     plt.tight_layout()
     plt.savefig("./figures/numerical_attributes_histogram.png")
+    plt.show()
+
+    # calculate the correlation matrix on the numeric columns
+    corr = df.select_dtypes('number').corr()
+
+    # plot the heatmap
+    sns.heatmap(corr, annot=True, fmt=".3f")
+    plt.tight_layout()
+    plt.savefig("./figures/numerical_attributes_correlation_heatmap.png")
     plt.show()
