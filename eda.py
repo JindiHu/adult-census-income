@@ -1,8 +1,8 @@
 import math
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 import constant
@@ -16,9 +16,11 @@ def perform_eda(original_df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
     # display data set example
     print(original_df.head())
+    print("*" * 10, "\n")
 
     # display summary of dataframe
     print(original_df.info())
+    print("*" * 10, "\n")
 
     # replace all "?" with null value
     df = original_df.replace('?', np.nan)
@@ -36,6 +38,7 @@ def perform_eda(original_df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     null_series = null_sum_series[null_sum_series > 0]
     # display the attributes with null value
     print(null_series)
+    print("*" * 10, "\n")
 
     missing_value_features = null_series.keys()
     for feature in missing_value_features:
@@ -44,14 +47,29 @@ def perform_eda(original_df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
         mode = df[feature].mode()[0]
         df[feature].fillna(mode, inplace=True)
 
+    remove_outliers(df)
+
     # verify if all null or missing value are replaced
     print(df.isnull().sum())
+    print("*" * 10, "\n")
+
+    # create new attribute capital net gain (profile)
+    df["capital-net"] = df["capital-gain"] - df["capital-loss"]
+
+    # drop capital-gain and capital-gain from dataframe
+    df.drop(["capital-gain", "capital-loss"], axis="columns", inplace=True)
 
     # drop the label column
-    features = df.drop(['income'], axis=1)
+    x = df.drop(["income"], axis="columns")
 
-    label = df['income']
-    return features, label
+    print(x.head())
+    print("*" * 10, "\n")
+
+    y = df["income"]
+
+    print(y.head())
+    print("*" * 10, "\n")
+    return x, y
 
 
 def categorical_attributes_plot(df: pd.DataFrame):
@@ -63,7 +81,7 @@ def categorical_attributes_plot(df: pd.DataFrame):
 
     plt.subplots(rows, cols, figsize=(20, 14))
     for i in range(len(fields)):
-        plt.subplot(rows, cols, i+1)
+        plt.subplot(rows, cols, i + 1)
         df[fields[i]].value_counts().sort_values().plot.bar()
         plt.xticks(rotation=90)
         plt.title(fields[i])
@@ -74,7 +92,7 @@ def categorical_attributes_plot(df: pd.DataFrame):
 
     plt.subplots(rows, cols, figsize=(30, 20))
     for i in range(len(fields)):
-        plt.subplot(rows, cols, i+1)
+        plt.subplot(rows, cols, i + 1)
         attribute = fields[i]
         low_income = df.loc[df[constant.TARGET] == '<=50K', attribute]
         high_income = df.loc[df[constant.TARGET] == '>50K', attribute]
@@ -109,9 +127,16 @@ def numerical_attributes_plot(df: pd.DataFrame):
     rows = math.ceil(len(fields) / cols)
 
     df.hist(bins=20, figsize=(20, 14), layout=(rows, cols))
-
     plt.tight_layout()
     plt.savefig("./figures/numerical_attributes_histogram.png")
+    plt.show()
+
+    plt.subplots(rows, cols, figsize=(20, 14))
+    for i in range(len(fields)):
+        plt.subplot(rows, cols, i + 1)
+        sns.boxplot(x=df[fields[i]])
+    plt.tight_layout()
+    plt.savefig("./figures/numerical_attributes_boxplot.png")
     plt.show()
 
     # calculate the correlation matrix on the numeric columns
@@ -122,3 +147,18 @@ def numerical_attributes_plot(df: pd.DataFrame):
     plt.tight_layout()
     plt.savefig("./figures/numerical_attributes_correlation_heatmap.png")
     plt.show()
+
+
+def remove_outliers(df: pd.DataFrame):
+    fields = df.select_dtypes(include="number").columns
+    for i in range(len(fields)):
+        attribute = df[fields[i]]
+        upper = attribute.quantile(0.75) + 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
+        lower = attribute.quantile(0.25) - 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
+        print("column -> ", fields[i], "")
+        x = df[(attribute < round(lower, 2)) | (attribute > round(upper, 2))][fields[i]]
+        print("No of Outliers present -> ", len(x))
+        print("*" * 10, '\n')
+        df = df[(df[fields[i]] >= lower) & (df[fields[i]] <= upper)]
+        print("data shape after removing outliers of ", fields[i], ":", df.shape)
+        print("*" * 10, "\n")
