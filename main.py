@@ -1,16 +1,15 @@
 import sys
-import pandas as pd
+
 import constant
-
-
-def load_data(file_name: str):
-    data = pd.read_csv(file_name, names=constant.DATA_NAMES, delimiter=",")
-    return data
-
+import utils
+from eda import perform_eda
 
 if __name__ == '__main__':
     if sys.version_info[0:2] != (3, 11):
         raise Exception('Requires python 3.11')
 
-    load_data(constant.TRAIN_DATASET_FILEPATH)
+    # load dataset into pandas dataframe
+    df = utils.load_data(constant.TRAIN_DATASET_FILEPATH, constant.DATA_NAMES)
 
+    # perform Exploratory Data Analysis (EDA)
+    df = perform_eda(df)
