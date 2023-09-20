@@ -31,6 +31,8 @@ def perform_eda(original_df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     # generate bar histograms on numerical attributes for visualization
     numerical_attributes_plot(df)
 
+    plot_heatmap(df)
+
     # count the number of null value in each attribute
     null_sum_series = df.isnull().sum()
 
@@ -139,10 +141,10 @@ def numerical_attributes_plot(df: pd.DataFrame):
     plt.savefig("./figures/numerical_attributes_boxplot.png")
     plt.show()
 
-    # calculate the correlation matrix on the numeric columns
-    corr = df.select_dtypes('number').corr()
 
-    # plot the heatmap
+def plot_heatmap(df: pd.DataFrame):
+    df["income"] = df["income"].map({"<=50K": 0, ">50K": 1})
+    corr = df.select_dtypes('number').corr()
     sns.heatmap(corr, annot=True, fmt=".3f")
     plt.tight_layout()
     plt.savefig("./figures/numerical_attributes_correlation_heatmap.png")
