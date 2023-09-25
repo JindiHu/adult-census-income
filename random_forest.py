@@ -1,11 +1,12 @@
-import numpy as np
+from statistics import mode
+
 import pandas as pd
 
 from decision_tree import DecisionTree
 
 
 class RandomForest:
-    def __init__(self, features: pd.DataFrame, target: pd.DataFrame, n_estimators=100, sample_frac=0.7, max_depth=5):
+    def __init__(self, features: pd.DataFrame, target: pd.DataFrame, n_estimators=100, sample_frac=0.1, max_depth=5):
         self.features = features
         self.target = target
         self.n_estimators = n_estimators
@@ -32,8 +33,7 @@ class RandomForest:
             # get the predictions from all the decision trees
             cur_row_df = pd.DataFrame(features.loc[i]).transpose()
             tree_predictions = [tree.predict(cur_row_df)[0] for tree in self.trees]
-
-            prediction = np.mean(tree_predictions)
+            prediction = mode(tree_predictions)
             predictions.append(prediction)
         return predictions
 
@@ -48,3 +48,4 @@ class RandomForest:
         print("RandomForest( n_estimators=", self.n_estimators, ", sample_frac=",
               self.sample_frac, ", max_depth=", self.max_depth, ") accuracy:", accuracy)
         print("*" * 10, "\n")
+        return accuracy

@@ -36,14 +36,14 @@ def perform_eda(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     # generate bar histograms on numerical attributes for visualization
     numerical_attributes_plot(df)
 
-    replace_missing_value(df)
-
-    remove_outliers(df)
-
     df["income"] = df["income"].map({"<=50K": 0, ">50K": 1})
     plot_heatmap(df)
 
-    feature_engineering(df)
+    replace_missing_value(df)
+
+    df = remove_outliers(df)
+
+    df = feature_engineering(df)
 
     print(df.head())
 
@@ -127,7 +127,7 @@ def plot_heatmap(df: pd.DataFrame):
 
 def replace_missing_value(df: pd.DataFrame):
     # replace all "?" with null value
-    df = df.replace("?", np.nan)
+    df.replace("?", np.nan, inplace=True)
 
     # count the number of null value in each attribute
     null_sum_series = df.isnull().sum()
@@ -145,18 +145,50 @@ def replace_missing_value(df: pd.DataFrame):
 
 
 def remove_outliers(df: pd.DataFrame):
-    cols_with_outliers = numerical_cols
-    for i in range(len(cols_with_outliers)):
-        attribute = df[cols_with_outliers[i]]
-        upper = attribute.quantile(0.75) + 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
-        lower = attribute.quantile(0.25) - 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
-        print("column -> ", cols_with_outliers[i], "")
-        x = df[(attribute < round(lower, 2)) | (attribute > round(upper, 2))][cols_with_outliers[i]]
-        print("no of outliers present -> ", len(x))
-        print("*" * 10, "\n")
-        df = df[(df[cols_with_outliers[i]] >= lower) & (df[cols_with_outliers[i]] <= upper)]
-        print("data shape after removing outliers of", cols_with_outliers[i], ":", df.shape)
-        print("*" * 10, "\n")
+    # remove outliers for column age
+    print("remove outliers for column -> age")
+    upper = df["age"].quantile(0.75) + 1.5 * (df["age"].quantile(0.75) - df["age"].quantile(0.25))
+    df = df[(df["age"] <= upper)]
+    print("data shape after removing outliers of age:", df.shape)
+    print("*" * 10, "\n")
+
+    # remove outliers for column fnlwgt
+    print("remove outliers for column -> fnlwgt")
+    upper = df["fnlwgt"].quantile(0.75) + 1.5 * (df["fnlwgt"].quantile(0.75) - df["fnlwgt"].quantile(0.25))
+    df = df[(df["fnlwgt"] <= upper)]
+    print("data shape after removing outliers of fnlwgt:", df.shape)
+    print("*" * 10, "\n")
+
+    # remove outliers for column education-num
+    print("remove outliers for column -> education-num")
+    lower = df["education-num"].quantile(0.25) - 1.5 * (
+            df["education-num"].quantile(0.75) - df["education-num"].quantile(0.25))
+    df = df[(df["education-num"] >= lower)]
+    print("data shape after removing outliers of education-num:", df.shape)
+    print("*" * 10, "\n")
+
+    # remove outliers for column hours-per-week
+    print("remove outliers for column -> hours-per-week")
+    lower = df["hours-per-week"].quantile(0.25) - 1.5 * (
+            df["hours-per-week"].quantile(0.75) - df["hours-per-week"].quantile(0.25))
+    upper = df["hours-per-week"].quantile(0.75) + 1.5 * (
+            df["hours-per-week"].quantile(0.75) - df["hours-per-week"].quantile(0.25))
+    df = df[(df["hours-per-week"] >= lower) & (df["hours-per-week"] <= upper)]
+    print("data shape after removing outliers of hours-per-week:", df.shape)
+    print("*" * 10, "\n")
+
+    # for i in range(len(cols_with_outliers)):
+    #     attribute = df[cols_with_outliers[i]]
+    #     upper = attribute.quantile(0.75) + 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
+    #     lower = attribute.quantile(0.25) - 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
+    #     print("column -> ", cols_with_outliers[i], "")
+    #     x = df[(attribute < round(lower, 2)) | (attribute > round(upper, 2))][cols_with_outliers[i]]
+    #     print("no of outliers present -> ", len(x))
+    #     print("*" * 10, "\n")
+    #     df = df[(df[cols_with_outliers[i]] >= lower) & (df[cols_with_outliers[i]] <= upper)]
+    #     print("data shape after removing outliers of", cols_with_outliers[i], ":", df.shape)
+    #     print("*" * 10, "\n")
+    return df
 
 
 def feature_engineering(df: pd.DataFrame):
@@ -192,10 +224,11 @@ def feature_engineering(df: pd.DataFrame):
     df["hours-per-week"] = pd.cut(df["hours-per-week"], bins=5)
     df["education-num"] = pd.qcut(df["education-num"], q=4, duplicates="drop")
     df["net-gain"] = df["capital-gain"] - df["capital-loss"]
-    df["net-gain"] = pd.qcut(df["net-gain"], q=4, duplicates="drop")
+    df["net-gain"] = pd.qcut(df["net-gain"], q=10, duplicates="drop")
     df["fnlwgt"] = pd.qcut(df["fnlwgt"], q=4, duplicates="drop")
 
     df.drop(["capital-gain", "capital-loss"], axis=1, inplace=True)
+    return df
 
 
 def encode_values(df: pd.DataFrame):
