@@ -2,11 +2,10 @@ import sys
 import time
 
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
 
 import utils
 from decision_tree import DecisionTree
-from eda import perform_eda
+from eda import perform_eda, replace_missing_value, feature_engineering, split_x_y
 from random_forest import RandomForest
 
 col_names = ["age", "workclass", "fnlwgt", "education", "education-num", "marital-status",
@@ -38,13 +37,24 @@ if __name__ == "__main__":
     if sys.version_info[0:2] != (3, 11):
         raise Exception("Requires python 3.11")
 
-    # load dataset into pandas dataframe
+    # load training dataset into pandas dataframe
     df = utils.load_data("./census_income/adult.data", col_names)
 
     # perform Exploratory Data Analysis (EDA)
-    x, y = perform_eda(df)
+    df = perform_eda(df)
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
+    # load test dataset into pandas dataframe
+    df_test = utils.load_data("./census_income/adult.test", col_names)
+    replace_missing_value(df_test)
+    df_test = feature_engineering(df_test)
+    df_test["income"] = df_test["income"].map({"<=50K.": 0, ">50K.": 1})
+
+    # encode both train dataset and test dataset
+    utils.encode_values(cols=["workclass", "education", "marital-status", "occupation",
+                              "relationship", "race", "sex", "native-country"], train_df=df, test_df=df_test)
+
+    x_train, y_train = split_x_y(df)
+    x_test, y_test = split_x_y(df_test)
 
     dt_max_depth = [0]
     dt_accuracy = [0]

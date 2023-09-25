@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import LabelEncoder
 
 # to ignore the future warnings from seaborn library
 warnings.filterwarnings("ignore", "is_categorical_dtype")
@@ -40,18 +39,15 @@ def perform_eda(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     plot_heatmap(df)
 
     replace_missing_value(df)
-
     df = remove_outliers(df)
 
     df = feature_engineering(df)
 
     print(df.head())
 
-    encode_values(df)
+    # x, y = split_x_y(df)
 
-    x, y = split_x_y(df)
-
-    return x, y
+    return df
 
 
 def categorical_attributes_plot(df: pd.DataFrame):
@@ -152,13 +148,6 @@ def remove_outliers(df: pd.DataFrame):
     print("data shape after removing outliers of age:", df.shape)
     print("*" * 10, "\n")
 
-    # remove outliers for column fnlwgt
-    print("remove outliers for column -> fnlwgt")
-    upper = df["fnlwgt"].quantile(0.75) + 1.5 * (df["fnlwgt"].quantile(0.75) - df["fnlwgt"].quantile(0.25))
-    df = df[(df["fnlwgt"] <= upper)]
-    print("data shape after removing outliers of fnlwgt:", df.shape)
-    print("*" * 10, "\n")
-
     # remove outliers for column education-num
     print("remove outliers for column -> education-num")
     lower = df["education-num"].quantile(0.25) - 1.5 * (
@@ -177,17 +166,6 @@ def remove_outliers(df: pd.DataFrame):
     print("data shape after removing outliers of hours-per-week:", df.shape)
     print("*" * 10, "\n")
 
-    # for i in range(len(cols_with_outliers)):
-    #     attribute = df[cols_with_outliers[i]]
-    #     upper = attribute.quantile(0.75) + 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
-    #     lower = attribute.quantile(0.25) - 1.5 * (attribute.quantile(0.75) - attribute.quantile(0.25))
-    #     print("column -> ", cols_with_outliers[i], "")
-    #     x = df[(attribute < round(lower, 2)) | (attribute > round(upper, 2))][cols_with_outliers[i]]
-    #     print("no of outliers present -> ", len(x))
-    #     print("*" * 10, "\n")
-    #     df = df[(df[cols_with_outliers[i]] >= lower) & (df[cols_with_outliers[i]] <= upper)]
-    #     print("data shape after removing outliers of", cols_with_outliers[i], ":", df.shape)
-    #     print("*" * 10, "\n")
     return df
 
 
@@ -217,25 +195,12 @@ def feature_engineering(df: pd.DataFrame):
                                  "Europe",
                                  inplace=True)
 
-    # df["native-country"] = df["native-country"].where(df["native-country"] == "United-States", "Others")
     df["race"].replace(["Black", "Asian-Pac-Islander", "Amer-Indian-Eskimo", "Other"], " Others", inplace=True)
 
-    df["age"] = pd.qcut(df["age"], q=4, duplicates="drop")
-    df["hours-per-week"] = pd.cut(df["hours-per-week"], bins=5)
-    df["education-num"] = pd.qcut(df["education-num"], q=4, duplicates="drop")
     df["net-gain"] = df["capital-gain"] - df["capital-loss"]
-    df["net-gain"] = pd.qcut(df["net-gain"], q=10, duplicates="drop")
-    df["fnlwgt"] = pd.qcut(df["fnlwgt"], q=4, duplicates="drop")
 
-    df.drop(["capital-gain", "capital-loss"], axis=1, inplace=True)
+    df.drop(["capital-gain", "capital-loss", "fnlwgt"], axis=1, inplace=True)
     return df
-
-
-def encode_values(df: pd.DataFrame):
-    label_encoder = LabelEncoder()
-    for col in df:
-        label_encoder.fit(df[col])
-        df[col] = label_encoder.transform(df[col])
 
 
 def split_x_y(df: pd.DataFrame):

@@ -126,6 +126,8 @@ class DecisionTree:
         for i in range(len(actual)):
             if pred[i] == actual[i]:
                 score = score + 1
+        print(pred)
+        print(actual)
         accuracy = score / len(actual)
         print("DecisionTree( max_depth=", self.max_depth, ") accuracy:", accuracy)
         print("*" * 10, "\n")
