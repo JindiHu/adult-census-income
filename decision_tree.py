@@ -129,3 +129,5 @@ class DecisionTree:
         accuracy = score / len(actual)
         print("DecisionTree( max_depth=", self.max_depth, ") accuracy:", accuracy)
         print("*" * 10, "\n")
+
+        return accuracy
