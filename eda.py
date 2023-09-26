@@ -15,7 +15,7 @@ categorical_cols = ["workclass", "education", "marital-status", "occupation",
 numerical_cols = ["age", "fnlwgt", "education-num", "capital-gain", "capital-loss", "hours-per-week"]
 
 
-def perform_eda(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
+def perform_eda(df: pd.DataFrame) -> pd.DataFrame:
     print("Shape of data frame", df.shape)
 
     # update pandas config to show all columns when display data set example
@@ -44,8 +44,6 @@ def perform_eda(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     df = feature_engineering(df)
 
     print(df.head())
-
-    # x, y = split_x_y(df)
 
     return df
 
