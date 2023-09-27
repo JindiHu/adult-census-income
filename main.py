@@ -112,7 +112,8 @@ if __name__ == "__main__":
 
     # try to find the optimal parameters by iterating the parameters within a range and plot the figures
     # observe the plots in terms of accuracy and training time to determine the optimal parameter candidate
-    # fine_tune_model(x_train, y_train, x_val, y_val)
+    # comment out next line to skip the fine tune of the model (this would take significant time to run)
+    fine_tune_model(x_train, y_train, x_val, y_val)
 
     # prepare the Random Forest Classifier to perform predications
     # with optimal parameters that selected from previous feature tuning
