@@ -48,6 +48,7 @@ steps:
       ```
 
 4. **Install Required Libraries**:
+
    Install the necessary libraries using `pip3`:
 
    ```bash
